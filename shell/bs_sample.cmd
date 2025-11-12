@@ -1,7 +1,6 @@
 REM === PARSE --basespace-api-key ARGUMENT IF PROVIDED ===
 REM Display full command line for debugging
 @echo off
-echo Full Command Line: %* 
 set BASESPACE_API_KEY=
 :parse_args
 if "%~1"=="" goto end_parse_args
@@ -136,8 +135,6 @@ echo accessToken = %BASESPACE_API_KEY% >> "%USERPROFILE%\.basespace\default.cfg"
 echo [STEP] BaseSpace config file generated at %USERPROFILE%\.basespace\default.cfg
 echo.
 
-type "%USERPROFILE%\.basespace\default.cfg"
-
 REM === LOG FUNCTION ===
 echo [STEP] Preparing logging function...
 echo.
@@ -174,10 +171,11 @@ FOR %%I IN (%PROJECT_IDS%) DO (
     echo.
     set /a TOTAL_INITIAL+=!INITIAL_COUNT!
 
+
     REM Query biosamples and check if any records exist before saving JSON
     echo [STEP] Processing biosamples for project %%I...
     echo.
-    for /f "delims=" %%S in ('powershell -Command "$samples = & ''%BASESPACE_CLI%'' biosamples list /project-id %%I /format:json /log:%LOG_FILE% | ConvertFrom-Json; if ($samples -eq $null) { Write-Host 0 } elseif ($samples -is [array]) { if ($samples.Length -gt 0) { Write-Host 1 } else { Write-Host 0 } } else { Write-Host 1 }"') do set HAS_SAMPLES=%%S
+    for /f "delims=" %%S in ('powershell -Command "$samples = & '%BASESPACE_CLI%' biosamples list /project-id %%I /format:json /log:%LOG_FILE% | ConvertFrom-Json; if ($samples -eq $null) { Write-Host 0 } elseif ($samples -is [array]) { if ($samples.Length -gt 0) { Write-Host 1 } else { Write-Host 0 } } else { Write-Host 1 }"') do set HAS_SAMPLES=%%S
     if "!HAS_SAMPLES!"=="1" (
         echo [STEP] Biosamples found for project %%I. Saving JSON...
         echo.

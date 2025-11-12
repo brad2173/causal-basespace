@@ -1,0 +1,8 @@
+openai
+requests
+beautifulsoup4
+azure-identity
+azure-core
+python-dotenv
+prompt_toolkit
+rich

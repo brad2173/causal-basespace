@@ -1,0 +1,67 @@
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Windows batch/PowerShell temp files
+*.log
+*.tmp
+*.bak
+*.swp
+Thumbs.db
+
+# Ignore compiled executables and CLI downloads
+*.exe
+*.dll
+*.msi
+
+# Ignore output and cache files
+*.json
+*.csv
+*.out
+*.lock
+
+# Ignore VS Code workspace settings
+.vscode/
+BaseSpace.code-workspace
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore Python virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Ignore Python build artifacts
+build/
+dist/
+*.egg-info/
+
+# Ignore test and coverage output
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ignore Python tool caches
+.mypy_cache/
+.pylint.d/
+.tox/
+.ipynb_checkpoints/
+
+# Ignore shell history and environment files
+*.env
+*.history
+
+# Ignore network drive mounts (if any are created locally)
+X:/
+
+# Ignore user-specific config
+*.cfg
+
+# Ignore directories for completed, working, or download (if not source)
+Completed/
+Download/
+Working/
+Log/
+Config/

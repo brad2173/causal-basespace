@@ -16,7 +16,7 @@ for /f "tokens=1-3 delims=: " %%a in ("%TIME%") do set LOGTIME=%%a%%b%%c
 
 set PROJECT_NAME=CAUSAL
 set RESEARCHNAME=%PROJECT_NAME%
-set BASESPACE_API_KEY=2ddf8681de154d4d94e7b711aca134dc
+set BASESPACE_API_KEY=${UAC_CRED_PASSWORD}
 set LOG_FILE=basespace_%LOGDATE%_%LOGTIME%.log
 set CONSOLE_LOG="X:\BaseSpace\shell\console.log"
 

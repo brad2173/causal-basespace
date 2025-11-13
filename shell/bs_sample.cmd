@@ -1,6 +1,13 @@
 REM === PARSE --basespace-api-key ARGUMENT IF PROVIDED ===
 REM Display full command line for debugging
 @echo off
+
+REM === CAPTURE JOB START TIME ===
+set "JOB_START=%DATE% %TIME%"
+REM === COLLECT FOLDER SIZE BEFORE EXPORT ===
+REM Use PowerShell to get the total size in GB (rounded to 2 decimals)
+for /f %%S in ('powershell -Command "$size = (Get-ChildItem -Path '\\i110filesmb.hs.it.vumc.io\CAUSAL-DataExport' -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB; [math]::Round($size,2)"') do set "SIZE_BEFORE_GB=%%S"
+
 set BASESPACE_API_KEY=
 :parse_args
 if "%~1"=="" goto end_parse_args
@@ -207,6 +214,82 @@ REM Show total difference across all projects
 set /a TOTAL_DIFF=TOTAL_FINAL-TOTAL_INITIAL
 echo     [INFO] All Projects: Total sample folder count difference: !TOTAL_DIFF!
 echo.
+
+REM === COLLECT FOLDER SIZE AFTER EXPORT (if new samples) ===
+if %TOTAL_DIFF% NEQ 0 (
+    REM Use PowerShell to get the total size in GB (rounded to 2 decimals)
+    for /f %%S in ('powershell -Command "$size = (Get-ChildItem -Path '\\i110filesmb.hs.it.vumc.io\CAUSAL-DataExport' -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB; [math]::Round($size,2)"') do set "SIZE_AFTER_GB=%%S"
+) else (
+    set "SIZE_AFTER_GB=%SIZE_BEFORE_GB%"
+)
+
+REM === CALCULATE SIZE DIFFERENCE (GB) ===
+REM Use PowerShell for decimal subtraction
+for /f %%D in ('powershell -Command "[math]::Round([decimal]'%SIZE_AFTER_GB%' - [decimal]'%SIZE_BEFORE_GB%',2)"') do set "SIZE_DIFF_GB=%%D"
+
+REM === CAPTURE JOB END TIME ===
+set "JOB_END=%DATE% %TIME%"
+
+REM === CALCULATE JOB DURATION (minutes, seconds) ===
+for /f %%D in ('powershell -Command "$start = [datetime]::Parse('%JOB_START%'); $end = [datetime]::Parse('%JOB_END%'); $diff = $end - $start; '{0} minutes, {1} seconds' -f $diff.Minutes, $diff.Seconds"') do set "JOB_DURATION=%%D"
+
+REM === PREPARE VARIABLES FOR STONEBRANCH EMAIL TEMPLATE ===
+
+set SB_TASK_NAME=${ops_task_name}
+set SB_TASK_INSTANCE=${ops_task_id}
+set SB_TOTAL_NEW_SAMPLES=%TOTAL_DIFF%
+set SB_JOB_DURATION=%JOB_DURATION%
+set SB_SIZE_BEFORE_GB=%SIZE_BEFORE_GB%
+set SB_SIZE_AFTER_GB=%SIZE_AFTER_GB%
+set SB_SIZE_DIFF_GB=%SIZE_DIFF_GB%
+
+REM === EXPORT VARIABLES FOR STONEBRANCH ===
+echo UC_OUTPUT:SB_TASK_NAME=%SB_TASK_NAME%
+echo UC_OUTPUT:SB_TASK_INSTANCE=%SB_TASK_INSTANCE%
+echo UC_OUTPUT:SB_TOTAL_NEW_SAMPLES=%SB_TOTAL_NEW_SAMPLES%
+echo UC_OUTPUT:SB_JOB_DURATION=%SB_JOB_DURATION%
+echo UC_OUTPUT:SB_SIZE_BEFORE_GB=%SB_SIZE_BEFORE_GB%
+echo UC_OUTPUT:SB_SIZE_AFTER_GB=%SB_SIZE_AFTER_GB%
+echo UC_OUTPUT:SB_SIZE_DIFF_GB=%SB_SIZE_DIFF_GB%
+
+REM === DEBUGGING OUTPUT: SHOW ALL SB_* VARIABLES ===
+echo.
+echo [DEBUG] Stonebranch Email Variables:
+echo     SB_TASK_NAME: %SB_TASK_NAME%
+echo     SB_TASK_INSTANCE: %SB_TASK_INSTANCE%
+echo     SB_TOTAL_NEW_SAMPLES: %SB_TOTAL_NEW_SAMPLES%
+echo     SB_JOB_DURATION: %SB_JOB_DURATION%
+echo     SB_SIZE_BEFORE_GB: %SB_SIZE_BEFORE_GB%
+echo     SB_SIZE_AFTER_GB: %SB_SIZE_AFTER_GB%
+echo     SB_SIZE_DIFF_GB: %SB_SIZE_DIFF_GB%
+echo.
+
+REM === These variables can now be passed to Stonebranch for email delivery ===
+
+REM === EXAMPLE EMAIL TEMPLATE (for Stonebranch) ===
+REM Subject: Genomic Data Download Status Update – ${date}
+REM
+REM Dear Project Manager,
+REM
+REM The latest genomic data download job has completed. Please find the summary below:
+REM
+REM Task Name: ${SB_TASK_NAME}
+REM Task Instance: ${SB_TASK_INSTANCE}
+REM
+REM Total new samples downloaded: ${SB_TOTAL_NEW_SAMPLES}
+REM Job duration: ${SB_JOB_DURATION}
+REM
+REM Data size before export: ${SB_SIZE_BEFORE_GB} GB
+REM Data size after export: ${SB_SIZE_AFTER_GB} GB
+REM Data size change: ${SB_SIZE_DIFF_GB} GB
+REM
+REM If you have any questions, please let us know.
+REM
+REM Best regards,
+REM [Your Team]
+
+REM === END EMAIL TEMPLATE ===
+
 REM === DISCONNECT X: DRIVE IF CONNECTED ===
 echo [STEP] Checking for existing X: drive mapping...
     echo.

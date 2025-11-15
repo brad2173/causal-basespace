@@ -91,7 +91,7 @@ if exist "X:\" (
     echo [ERROR] X: drive is not mapped. Cannot determine folder size before export. 1>&2
     set "TMP_SIZE_BEFORE_GB=0"
 )
-endlocal & set "SIZE_BEFORE_GB=%TMP_SIZE_BEFORE_GB%"
+endlocal & set "SIZE_BEFORE_GB=!TMP_SIZE_BEFORE_GB!"
 
 REM === CAPTURE JOB START TIME ===
 set "JOB_START=%DATE% %TIME%"
